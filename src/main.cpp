@@ -79,13 +79,11 @@ void readCAN()
   {
     interrupt=false;
     Serial.println("interrupt true!!!");
-    uint8_t irq = mcp2515.getInterrupts();
-    if (irq && MCP2515::CANINTF_RX0IF || irq && MCP2515::CANINTF_RX1IF){
-      if (mcp2515.readMessage(MCP2515::RXB0, &canMsg) == MCP2515::ERROR_OK||mcp2515.readMessage(MCP2515::RXB1, &canMsg) == MCP2515::ERROR_OK) { // && (canMsg.can_id == 0x98FF0102) ) {
-        speedFbCAN = 0.2 * canMsg.data[2];
+    if (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK)
+     { // && (canMsg.can_id == 0x98FF0102) ) {
+        speedFbCAN = 0.2 * canMsg.data[7];
     }
    }
-  }
   // delay(100);
   // if ((mcp2515_1.readMessage(&canMsg) == MCP2515::ERROR_OK)) { // && (canMsg.can_id == 0x98FF0102) ) {
   //   speedFbCAN_1 = 0.2 * canMsg.data[2];
@@ -137,8 +135,8 @@ void setup() {
   digitalWrite(neutral, HIGH);
   pinMode(interruptPin, INPUT_PULLUP);
   mcp2515.reset();
-  mcp2515.setBitrate(CAN_500KBPS, MCP_8MHZ);
-  mcp2515.setListenOnlyMode();
+  mcp2515.setBitrate(CAN_500KBPS, MCP_16MHZ);
+  mcp2515.setNormalMode();
   mcp2515_1.reset();
   mcp2515_1.setBitrate(CAN_500KBPS, MCP_8MHZ);
   mcp2515_1.setNormalMode();
@@ -152,6 +150,14 @@ void setup() {
   prevSendTime = millis();
   errTimer = millis();
   attachInterrupt(digitalPinToInterrupt(interruptPin), irqHandler,FALLING);
+  mcp2515.setFilterMask(MCP2515::MASK0, true, 0xFFFFFFFF);
+  mcp2515.setFilterMask(MCP2515::MASK1, true, 0xFFFFFFFF);
+  mcp2515.setFilter(MCP2515::RXF0, true, 0x18FF0F04);
+  mcp2515.setFilter(MCP2515::RXF1, true, 0x18FF0F04);
+  mcp2515.setFilter(MCP2515::RXF2, true, 0x18FF0F04);
+  mcp2515.setFilter(MCP2515::RXF3, true, 0x18FF0F04);
+  mcp2515.setFilter(MCP2515::RXF4, true, 0x18FF0F04);
+  mcp2515.setFilter(MCP2515::RXF5, true, 0x18FF0F04);
   
 }
 
