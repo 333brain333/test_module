@@ -2,6 +2,7 @@ MCP2515 mcp2515(10);
 MCP2515 mcp2515_1(9);
 
 struct can_frame canMsg;
+struct can_frame canMsgToSend;
 enum status_enum{
 NORMAL,
 ERR
@@ -17,6 +18,7 @@ double speedFbCAN = 0.0;
 double speedFbCAN_1 = 0.0;
 unsigned long prevSendTime = 0;
 unsigned long errTimer = 0;
+unsigned long canSendTimer = 0;
 const int relay1 = 5; // relay 1 - according to principal scheme  - it connects "neutral -" line to +24V - in case of HIGH mode, or disconnets with any line in case of LOW mode
 const int relay2 = 6; // relay 2 - according to principal scheme - it connecnts "signal" and "neutral -" lines to handle or to digital potentiometer and to relay 1 accordingly
 const int neutral = 7; // using this pin one could get nutral line state in inversed logic  - "neutral -":+24 V ==> 7 pin is LOW or "neutral -": 0 V ==> 7 pin is HIGH

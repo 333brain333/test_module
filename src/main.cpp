@@ -1,6 +1,7 @@
 #include <SPI.h>
 #include <mcp2515.h>
 #include "main.h"
+#include <Arduino.h>
 
 
 
@@ -75,24 +76,18 @@ void SEND_FOR_PLOTTER(){
 
 void readCAN()
 {
-  if (interrupt)
-  {
-    interrupt=false;
-    Serial.println("interrupt true!!!");
     if (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK)
      { // && (canMsg.can_id == 0x98FF0102) ) {
         speedFbCAN = 0.2 * canMsg.data[7];
     }
-   }
-  // delay(100);
-  // if ((mcp2515_1.readMessage(&canMsg) == MCP2515::ERROR_OK)) { // && (canMsg.can_id == 0x98FF0102) ) {
-  //   speedFbCAN_1 = 0.2 * canMsg.data[2];
-  // }
 }
 
 void sendCAN()
 {
-  
+  if (millis()-canSendTimer>10){
+    canSendTimer=millis();
+    mcp2515_1.sendMessage(&canMsgToSend);
+  }
 }
 
 int is_in_range(int w){
@@ -133,9 +128,8 @@ void setup() {
   digitalWrite(relay2, LOW);
   pinMode(neutral, INPUT);
   digitalWrite(neutral, HIGH);
-  pinMode(interruptPin, INPUT_PULLUP);
   mcp2515.reset();
-  mcp2515.setBitrate(CAN_500KBPS, MCP_16MHZ);
+  mcp2515.setBitrate(CAN_500KBPS, MCP_8MHZ);
   mcp2515.setNormalMode();
   mcp2515_1.reset();
   mcp2515_1.setBitrate(CAN_500KBPS, MCP_8MHZ);
@@ -149,16 +143,16 @@ void setup() {
 
   prevSendTime = millis();
   errTimer = millis();
-  attachInterrupt(digitalPinToInterrupt(interruptPin), irqHandler,FALLING);
-  mcp2515.setFilterMask(MCP2515::MASK0, true, 0xFFFFFFFF);
-  mcp2515.setFilterMask(MCP2515::MASK1, true, 0xFFFFFFFF);
-  mcp2515.setFilter(MCP2515::RXF0, true, 0x18FF0F04);
-  mcp2515.setFilter(MCP2515::RXF1, true, 0x18FF0F04);
-  mcp2515.setFilter(MCP2515::RXF2, true, 0x18FF0F04);
-  mcp2515.setFilter(MCP2515::RXF3, true, 0x18FF0F04);
-  mcp2515.setFilter(MCP2515::RXF4, true, 0x18FF0F04);
-  mcp2515.setFilter(MCP2515::RXF5, true, 0x18FF0F04);
-  
+  canMsgToSend.can_id=0x12345678;
+canMsgToSend.can_dlc=8;
+canMsgToSend.data[0]=0xFF;
+canMsgToSend.data[1]=0xFF;
+canMsgToSend.data[2]=0xFF;
+canMsgToSend.data[3]=0xFF;
+canMsgToSend.data[4]=0xFF;
+canMsgToSend.data[5]=0xFF;
+canMsgToSend.data[6]=0xFF;
+canMsgToSend.data[7]=0xFF;
 }
 
 //////////////////////////////////////////////////////////////////////LOOP//////////////////////////////////////////////////////////////////////
@@ -186,6 +180,7 @@ void loop() {
   }
 
   readCAN();
+  sendCAN();
   GET_HANDLE();
   SEND_FOR_HUMAN();
   SET_SPEED();
