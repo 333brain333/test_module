@@ -6,10 +6,7 @@
 
 
 
-void irqHandler()
-{
-  interrupt=true;
-}
+
 
 void SET_SPEED(void) {
   
@@ -76,12 +73,19 @@ void SEND_FOR_PLOTTER(){
 
 void readCAN()
 {
+   if (interrupt)
+   {
     if (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK)
      { // && (canMsg.can_id == 0x98FF0102) ) {
-        speedFbCAN = 0.2 * canMsg.data[7];
+        speedFbCAN = 0.2 * canMsg.data[5];
     }
+     interrupt--;
+   }
 }
-
+void irqHandler()
+{
+  interrupt++;
+}
 void sendCAN()
 {
   if (millis()-canSendTimer>10){
@@ -127,14 +131,25 @@ void setup() {
   digitalWrite(relay1, LOW);
   digitalWrite(relay2, LOW);
   pinMode(neutral, INPUT);
+  pinMode(interruptPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(interruptPin), irqHandler, FALLING);
   digitalWrite(neutral, HIGH);
   mcp2515.reset();
+  mcp2515.setFilterMask(MCP2515::MASK0, true, 0x1FFFFFFF);
+  mcp2515.setFilterMask(MCP2515::MASK1, true, 0x1FFFFFFF);
+  mcp2515.setFilter(MCP2515::RXF0, true, 0x18FF0202);
+  mcp2515.setFilter(MCP2515::RXF1, true, 0x18FF0202);
+  mcp2515.setFilter(MCP2515::RXF2, true, 0x18FF0202);
+  mcp2515.setFilter(MCP2515::RXF3, true, 0x18FF0202);
+  mcp2515.setFilter(MCP2515::RXF4, true, 0x18FF0202);
+  mcp2515.setFilter(MCP2515::RXF5, true, 0x18FF0202);
   mcp2515.setBitrate(CAN_500KBPS, MCP_8MHZ);
   mcp2515.setNormalMode();
-  mcp2515_1.reset();
-  mcp2515_1.setBitrate(CAN_500KBPS, MCP_8MHZ);
-  mcp2515_1.setNormalMode();
-
+  // mcp2515_1.reset();
+  // mcp2515_1.setBitrate(CAN_500KBPS, MCP_8MHZ);
+  // mcp2515_1.setNormalMode();
+  
+  
   Serial.begin(115200);
   Serial.setTimeout(10);
   while (!Serial) {
@@ -178,7 +193,6 @@ void loop() {
       }
     }
   }
-
   readCAN();
   sendCAN();
   GET_HANDLE();
@@ -187,4 +201,5 @@ void loop() {
   GET_WIPER_POS();
   is_in_range(wiper_pos);
   err_counter_check();
+  
 }

@@ -32,4 +32,4 @@ int errCounter = 0;
 String incoming_mes = "";
 String incoming_mode = "m";
 String current_mode = "manual";
-bool interrupt = false;
+volatile byte interrupt = 0;
