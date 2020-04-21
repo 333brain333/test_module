@@ -64,13 +64,13 @@ void SEND_FOR_HUMAN()
     Serial.print((String)"Handle position: " + handle_pos + ";Pot. value: " + incoming_ref_speed + ";Actual pot.value: "+wiper_pos+";Neutral: " + digitalRead(neutral) + ";Mode: " + current_mode + ";Speed from CAN1: " + String(speedFbCAN) + ";Speed from CAN2: " + String(speedFbCAN_1) +";err: "+errorNames[status]+ "\n");
   }
 }
-
+/*
 void SEND_FOR_PLOTTER(){
   Serial.print(incoming_ref_speed);
   Serial.print(" ");
   Serial.println(wiper_pos);
 }
-
+*/
 void readCAN()
 {
    if (interrupt)
